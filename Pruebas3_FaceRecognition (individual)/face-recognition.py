@@ -4,7 +4,7 @@
 import cv2
 import face_recognition
 
-name = "Javi2"
+name = "Javi"
 # Imagen a comparar
 image = cv2.imread("Images/"+name+".jpg")
 face_loc = face_recognition.face_locations(image)[0] # Esto devuelve la ubicación (arriba, derecha, abajo, izquierda) del rostro en la imagen
