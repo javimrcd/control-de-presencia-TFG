@@ -1,0 +1,9 @@
+Servidor Remoto: Esta opción implica alojar tu script de reconocimiento facial en un servidor remoto 
+y hacer llamadas a este servidor desde tu aplicación móvil. 
+Puedes crear una API REST en Python utilizando frameworks como Flask o Django para exponer tus 
+funciones de reconocimiento facial. Luego, desde tu aplicación Flutter, puedes hacer llamadas HTTP a 
+esta API para enviar imágenes y recibir resultados de reconocimiento facial.
+Esta opción puede ser más escalable y flexible, ya que puedes actualizar y mantener tu algoritmo de 
+reconocimiento facial sin necesidad de actualizar la aplicación móvil.
+Sin embargo, ten en cuenta que el rendimiento puede verse afectado por la latencia de la red y 
+la capacidad del servidor.
