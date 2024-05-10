@@ -4,7 +4,7 @@ from deepface import DeepFace
 
 def reconocimiento_facial(nombre_persona):
     cap = cv2.VideoCapture(0)
-    imagesFoundPath = "Rostros capturados/"
+    imagesFoundPath = "views/functions/Rostros capturados/"
     max_rostros = 3
     faceClassif = cv2.CascadeClassifier('C:/Programas/opencv/sources/data/haarcascades/haarcascade_frontalface_default.xml')
     count = 0
@@ -82,6 +82,8 @@ def reconocimiento_facial(nombre_persona):
 
     trues = sum(veredicto for (_, veredicto) in veredictos_individuales)
     falses = len(veredictos_individuales) - trues
+    print("Trues", trues)
+    print("Falses", falses)
     veredicto_final = trues > falses
 
     print('Veredicto final:', veredicto_final)
@@ -90,6 +92,8 @@ def reconocimiento_facial(nombre_persona):
         print('La persona identificada es:', nombre_persona)
     else:
         print('La persona identificada NO es:', nombre_persona)
+
+    
 
 # Ejemplo de uso
 # reconocimiento_facial("Javi")

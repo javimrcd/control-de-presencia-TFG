@@ -9,8 +9,9 @@ def handle_facial_recognition_click(_=None):
 
 
 def Facial(page: ft.Page, params: Params, basket: Basket):
-    facial_recognition_button: ElevatedButton = ElevatedButton(text="Cámara", width=200)
-    continue_button: ElevatedButton = ElevatedButton(text="Continue", width=200, disabled=True)
+    examenes_button: ElevatedButton = ElevatedButton(text="Examenes", on_click=lambda _: page.go("/user_id/examenes/"))
+    facial_recognition_button: ElevatedButton = ElevatedButton(text="Cámara", width=200, on_click=handle_facial_recognition_click)
+    continue_button: ElevatedButton = ElevatedButton(text="Continuar", width=200, on_click=lambda _: page.go("/user_id/examenes/:exam_id/identificacion_codigo"))
 
     
     return ft.View(
@@ -18,9 +19,9 @@ def Facial(page: ft.Page, params: Params, basket: Basket):
 
         controls = [
             ft.Text("Identificación facial", weight="bold"),
-            # ft.ElevatedButton("Continuar", on_click=lambda _: page.go("/user_id/examenes/:exam_id/identificacion_codigo"))
-            ft.ElevatedButton("Examenes", on_click=lambda _: page.go("/user_id/examenes/")),
-            ft.ElevatedButton("Facial Recognition", on_click=handle_facial_recognition_click)
+            examenes_button,
+            facial_recognition_button,
+            continue_button
         ]
     )
          
