@@ -4,7 +4,7 @@ from views.home import Home
 from views.examenes import Examenes
 from views.facial_rec import Facial
 # from views.code_rec import Codigo
-from login import Login
+from views.login import Login
 
 def main(page: ft.Page):
     page.title = 'App de control de acceso a examenes'
