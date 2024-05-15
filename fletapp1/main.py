@@ -2,7 +2,10 @@ import flet as ft
 from flet_route import Routing, path
 from views.home import Home
 from views.examenes import Examenes
-from views.facial_rec_OnScreen_integrated import Facial
+# from views.facial_rec_OnScreen_integrated import Facial
+from views.facial import Facial
+from views.resultados_rostros import ResultadosRostros
+from views.captura_de_camara import CapturaDeCamara
 from views.code_rec import Codigo
 from views.login import Login
 
@@ -20,10 +23,11 @@ def main(page: ft.Page):
         path(url="/login", clear = True, view=Login),
         path(url="/user_id/examenes/", clear = True, view=Examenes),
         path(url="/user_id/examenes/:exam_id/identificacion_facial", clear = True, view=Facial),
+        path(url="/user_id/examenes/:exam_id/identificacion_facial/resultados_rostros", clear = True, view=ResultadosRostros),
         path(url="/user_id/examenes/:exam_id/identificacion_codigo", clear = True, view=Codigo)         
     ]
 
     Routing(page=page, app_routes=app_routes)
-    page.go("/login")
+    page.go("/user_id/examenes/")
 
 ft.app(target = main)

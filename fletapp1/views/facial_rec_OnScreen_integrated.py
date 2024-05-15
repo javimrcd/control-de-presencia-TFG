@@ -7,7 +7,7 @@ import base64
 import threading
 
 class CapturaDeCamara(ft.UserControl):
-    def __init__(self):
+    def __init__(self, on_complete_callback):
         super().__init__()
         self.camera_running = False
         self.camera_lock = threading.Lock()
@@ -16,6 +16,7 @@ class CapturaDeCamara(ft.UserControl):
         self.max_rostros = 3
         self.faceClassif = cv2.CascadeClassifier('C:/Programas/opencv/sources/data/haarcascades/haarcascade_frontalface_default.xml')
         self.count = 0
+        self.on_complete_callback = on_complete_callback
 
     def update_timer(self):
         cap = cv2.VideoCapture(0)
@@ -50,12 +51,14 @@ class CapturaDeCamara(ft.UserControl):
                         print("Rostro "+'rostro_{}.jpg'.format(self.count)+" detectado y capturado")
                         self.count += 1
                         self.capture_face = False
+                        if self.count >= self.max_rostros:
+                            self.on_complete_callback()
+                            self.stop_camera()
+                            return
                 else:
                     self.capture_face = False
                     print("Cuidado, ha pulsado 's' mientras no se detectaba un rostro")
                 
-            k = cv2.waitKey(1)
-
         cap.release()
 
     def start_camera(self):
@@ -73,9 +76,45 @@ class CapturaDeCamara(ft.UserControl):
         )
         return self.img
 
+# PAGINA DE RESULTADOS DE ROSTROS
+# def ResultadosRostros(page: ft.Page, params: Params, basket: Basket):
+#     image_files = [
+#         'views/functions/Rostros capturados/rostro_0.jpg',
+#         'views/functions/Rostros capturados/rostro_1.jpg',
+#         'views/functions/Rostros capturados/rostro_2.jpg'
+#     ]
+
+#     images = [ft.Image(src=image) for image in image_files]
+
+#     def repetir():
+#         capturaDeCamara.count = 0
+#         capturaDeCamara.visible = False
+#         page.go("/user_id/examenes/:exam_id/identificacion_facial")
+
+#     def confirmar():
+#         print("Confirmar presionado")
+
+#     repetir_button = ElevatedButton(text="Repetir", on_click=lambda _: repetir())
+#     confirmar_button = ElevatedButton(text="Confirmar", on_click=lambda _: confirmar())
+
+#     return ft.View(
+#         "/resultados_rostros",
+#         controls=[
+#             ft.Column(images),
+#             ft.Row([repetir_button, confirmar_button])
+#         ]
+#     )
+
+
+
 def Facial(page: ft.Page, params: Params, basket: Basket):
-    capturaDeCamara = CapturaDeCamara()
+
+    def on_capture_complete():
+        page.go("/resultados_rostros")
+
+    capturaDeCamara = CapturaDeCamara(on_complete_callback=on_capture_complete)
     capturaDeCamara.visible = False
+
 
     def toggle_camera(button_open_cam: ElevatedButton, button_photo: ElevatedButton):
         if capturaDeCamara.camera_running:
