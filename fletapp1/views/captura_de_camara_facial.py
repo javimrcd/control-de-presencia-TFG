@@ -5,7 +5,7 @@ import base64
 import threading
 from state import state
 
-class CapturaDeCamara(ft.UserControl):
+class CapturaDeCamara_Facial(ft.UserControl):
     def __init__(self, on_complete_callback):
         super().__init__()
         self.camera_running = False
@@ -56,7 +56,7 @@ class CapturaDeCamara(ft.UserControl):
                             return
                 else:
                     self.capture_face = False
-                    print("Cuidado, ha pulsado 's' mientras no se detectaba un rostro")
+                    print("Cuidado, ha querido hacer una foto mientras no se detectaba un rostro")
                 
         cap.release()
 
