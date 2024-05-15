@@ -2,8 +2,7 @@ import flet as ft
 from flet_route import Routing, path
 from views.home import Home
 from views.examenes import Examenes
-# from views.facial_rec import Facial
-from views.facial_rec_OnScreen import Facial
+from views.facial_rec_OnScreen_integrated import Facial
 from views.code_rec import Codigo
 from views.login import Login
 

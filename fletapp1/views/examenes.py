@@ -7,10 +7,10 @@ def Examenes(page: ft.Page, params: Params, basket: Basket):
         "/user_id/examenes/",
 
         controls = [
-            ft.Text("Examenes"),
+            ft.Text("Exámenes", size=25, weight="bold"),
             ft.ElevatedButton("Logout", on_click=lambda _: page.go("/login")),
             # ft.ElevatedButton("Home", on_click=lambda _: page.go("/")),
-            ft.ElevatedButton("Continuar", on_click=lambda _: page.go("/user_id/examenes/:exam_id/identificacion_facial"))
+            ft.ElevatedButton("EXAMEN 1", on_click=lambda _: page.go("/user_id/examenes/:exam_id/identificacion_facial"))
         ]
     )
          
