@@ -3,21 +3,19 @@ from flet import TextField, Checkbox, ElevatedButton, Text, Column, SnackBar
 from flet_core.control_event import ControlEvent
 from flet_route import Params, Basket
 from firebase_config import auth, db
-from state import state
 import requests
-
 
 API_KEY = "AIzaSyDur9r1eePIyCneAq6F3AnxV6SCQkS48uY"
 
-def Login(page: ft.Page, params: Params, basket: Basket):
+def Register(page: ft.Page, params: Params, basket: Basket):
     
     # Setup our fields
     text_email: TextField = TextField(label="Username", text_align=ft.TextAlign.LEFT, width=200)
     text_password: TextField = TextField(label="Password", text_align=ft.TextAlign.LEFT, width=200, password=True)
     checkbox_signup: Checkbox = Checkbox(label="I agree to stuff", value=False)
-    submit_button: ElevatedButton = ElevatedButton(text="Entrar", width=200, disabled=True)
-    text_signup: Text = Text(value="¿Todavía no tienes una cuenta?")
-    signup_button: ElevatedButton = ElevatedButton(text="Registrarse", width=200)
+    submit_button: ElevatedButton = ElevatedButton(text="Registrarse", width=200, disabled=True)
+    text_login: Text = Text(value="¿Ya tienes una cuenta?")
+    login_page_button: ElevatedButton = ElevatedButton(text="Iniciar sesión", width=200)
 
     # functionalities
     def validate(e: ControlEvent) -> None:
@@ -32,8 +30,8 @@ def Login(page: ft.Page, params: Params, basket: Basket):
         email = text_email.value
         password = text_password.value
         try:
-            # Hacer la solicitud a la API de Firebase para iniciar sesión
-            url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={API_KEY}"
+            # Hacer la solicitud a la API de Firebase para registrar un nuevo usuario
+            url = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={API_KEY}"
             payload = {
                 "email": email,
                 "password": password,
@@ -43,31 +41,25 @@ def Login(page: ft.Page, params: Params, basket: Basket):
             response_data = response.json()
             
             if response.status_code == 200:
-                user_id = response_data['localId']
+                user_id = response_data['localId']  # Captura el user_id del usuario registrado
+
                 page.snack_bar = SnackBar(
-                    Text(f"Usuario autenticado: {email}", size=20),
+                    Text(f"Usuario registrado con éxito: {email}", size=20),
                     bgcolor="green"
                 )
                 page.snack_bar.open = True
-                
-                # Obtener el rol del usuario desde Firestore
-                user_doc = db.collection('usuarios').document(user_id).get()
-                if user_doc.exists:
-                    user_data = user_doc.to_dict()
-                    rol_user = user_data.get('rol')
 
-                    # Almacenar el email y rol en el estado
-                    state.user_email = email
-                    state.user_role = rol_user
+                # Guardar el usuario en Firestore
+                user_doc = db.collection('usuarios').document(user_id)
+                user_doc.set({
+                    'email': email,
+                    'rol': 'alumno',  # Se asigna el rol de alumno por defecto
+                    'imagen_perfil': '',
+                    'asignaturas': []
+                })
 
-                    # Redirigir según el rol del usuario
-                    if rol_user == 'profesor':
-                        page.go(f"/{user_id}/examenes_profesor/")
-                    else:
-                        page.go(f"/{user_id}/examenes_alumno/")
-                else:
-                    raise Exception("No se pudo obtener el rol del usuario.")
-
+                # Redirigir a la página de registro de cara pasando el user_id
+                page.go(f"/register_face_db/{user_id}")
             else:
                 raise Exception(response_data["error"]["message"])
         except Exception as e:
@@ -76,31 +68,34 @@ def Login(page: ft.Page, params: Params, basket: Basket):
                 bgcolor="red"
             )
             page.snack_bar.open = True
-        page.update() 
+        page.update()
+     
 
-    def registrarse(e: ControlEvent) -> None:
-        page.go("/register")
+    def login(e: ControlEvent) -> None:
+        page.go("/login")
 
     # Link the functions to our UI
     checkbox_signup.on_change = validate
     text_email.on_change = validate
     text_password.on_change = validate
     submit_button.on_click = submit
-    signup_button.on_click = registrarse
+    login_page_button.on_click = login
     
 
     return ft.View(
-        "/login",
+        "/register",
         controls=[
             Column(
-                [ft.Text("Login", size=25, weight="bold"),
+                [ft.Text("Registro", size=25, weight="bold"),
                 text_email,
                 text_password,
                 checkbox_signup,
                 submit_button,
-                text_signup,
-                signup_button]
+                text_login,
+                login_page_button]
             )
         ]
     )
+
+
 
