@@ -4,51 +4,72 @@ from flet_route import Params, Basket
 from state import state
 import os
 from deepface import DeepFace
+from firebase_config import db, bucket
 
 def ResumenRostros(page: ft.Page, params: Params, basket: Basket):
-    # Imágenes a mostrar de los rostros capturados
-    image_files = [
-        'views/functions/Rostros capturados/rostro_0.jpg',
-        'views/functions/Rostros capturados/rostro_1.jpg',
-        'views/functions/Rostros capturados/rostro_2.jpg'
-    ]
-    images = [ft.Image(src=image, border_radius=ft.border_radius.all(20)) for image in image_files]
+    user_id = state.user_id
+    control_acceso_id = state.control_acceso_id
+    print(user_id, control_acceso_id)
+    image_paths = state.images_paths_array
+
+    images = [ft.Image(src=image, border_radius=ft.border_radius.all(20)) for image in image_paths]
 
     # FUNCIONES DE LOS BOTONES
     def repetir():
-        for i in range(3):
-            os.remove(f'views/functions/Rostros capturados/rostro_{i}.jpg')
+        for image_path in image_paths:
+            os.remove(image_path)
         state.captura_de_camara_facial.visible = False
-        page.go("/user_id/examenes/:exam_id/identificacion_facial")
+        page.go(f"/{user_id}/examenes_alumno/{control_acceso_id}/identificacion_facial")
 
     def confirmar():
         nombre = "Javi"
-        img_base = "views/functions/Persona/"+nombre+"/"+nombre+".jpg"
+        profile_image_path = f"usuarios/{user_id}/perfil.jpg"
 
-        rostros_capturados_path = "views/functions/Rostros capturados/"
-        rostros_capturados = os.listdir(rostros_capturados_path)
+        # Descargar la imagen de perfil del storage a una ubicación local temporal
+        temp_profile_image = f"temp_{user_id}_perfil.jpg"
+        blob = bucket.blob(profile_image_path)
+        blob.download_to_filename(temp_profile_image)
 
         veredictos_individuales = []
         veredicto_final = False
 
-        print('Resultados de verificación individuales:')
-        for rostro in rostros_capturados:
-            # Aplicamos el reconocimiento facial
+        # Subir rostros a la DB
+        for i, image_path in enumerate(image_paths):
+            blob = bucket.blob(f"usuarios/{user_id}/controles_acceso/{control_acceso_id}/rostro_{i}.jpg")
+            blob.upload_from_filename(image_path)
+            blob.make_public()
+            image_url = blob.public_url
+
+            db.collection('controles_acceso').document(control_acceso_id).update({
+                f"imagen_{i+1}": image_url
+            })
+
+            # Realizar la verificacion facial    
+            print('Resultados de verificación individuales:')
+        
             resultado_verificacion = DeepFace.verify(
-                img1_path = img_base, 
-                img2_path = rostros_capturados_path+rostro, 
+                img1_path = temp_profile_image, 
+                img2_path = image_path, 
                 detector_backend = "opencv", 
                 distance_metric = "cosine", 
                 model_name = "VGG-Face", 
                 enforce_detection=False
             )
-            veredictos_individuales.append((rostro, resultado_verificacion['verified']))
+            veredictos_individuales.append((image_path, resultado_verificacion['verified']))
 
-            print('Analizando '+f'{rostro}')
+            # Actualizar veredictos individuales en Firestore
+            db.collection('controles_acceso').document(control_acceso_id).update({
+                f"veredicto_facial_{i+1}": bool(resultado_verificacion['verified'])
+            })
+
+            print('Analizando '+f'{image_path}')
             print('Distancia: '+str(resultado_verificacion['distance']))
             print('Umbral: '+str(resultado_verificacion['threshold']))
             print('Veredicto: '+str(resultado_verificacion['verified']))
             print('\n')
+
+        # Eliminar la imagen de perfil descargada temporalmente
+        os.remove(temp_profile_image)
 
         # Calcula el veredicto final
         trues = sum(veredicto for (_, veredicto) in veredictos_individuales)
@@ -57,6 +78,11 @@ def ResumenRostros(page: ft.Page, params: Params, basket: Basket):
 
         state.facial_v = veredicto_final # Guardo el veredicto final en el estado
 
+        # Actualizar veredicto final en Firestore    
+        db.collection('controles_acceso').document(control_acceso_id).update({
+            "veredicto_facial_final": bool(veredicto_final)
+        })
+
         print('Veredicto final:',veredicto_final)
         
         if veredicto_final:
@@ -64,7 +90,10 @@ def ResumenRostros(page: ft.Page, params: Params, basket: Basket):
         else:
             print('La persona identificada NO es:',nombre)
 
-        page.go("/:user_id/examenes/:exam_id/identificacion_facial/veredicto_facial_resultados/")
+        for image_path in image_paths:
+            os.remove(image_path)
+
+        page.go(f"/{user_id}/examenes_alumno/{control_acceso_id}/identificacion_facial/veredicto_facial_resultados/")
 
 
     # BOTONES DE LA VISTA RESUMEN
@@ -73,7 +102,7 @@ def ResumenRostros(page: ft.Page, params: Params, basket: Basket):
 
 
     return ft.View(
-        "/:user_id/examenes/:exam_id/identificacion_facial/resumen_rostros",
+        "/:user_id/examenes_alumno/:exam_id/identificacion_facial/resumen_rostros",
         controls=[
             Column(images),
             Row([repetir_button, confirmar_button])

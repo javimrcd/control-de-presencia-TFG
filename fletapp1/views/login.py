@@ -44,6 +44,7 @@ def Login(page: ft.Page, params: Params, basket: Basket):
             
             if response.status_code == 200:
                 user_id = response_data['localId']
+                state.user_id = user_id
                 page.snack_bar = SnackBar(
                     Text(f"Usuario autenticado: {email}", size=20),
                     bgcolor="green"

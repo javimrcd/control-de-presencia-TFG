@@ -9,10 +9,10 @@ def ResultadoVeredictoCodigo(page: ft.Page, params: Params, basket: Basket):
     resultado_text = Text("Resultado enviado", size=25, weight="bold")
     veredicto_final_facial_text = Text(f"Veredicto: {veredicto_codigo}")
 
-    examenes_button: ElevatedButton = ElevatedButton(text="Exámenes", on_click=lambda _: page.go("/user_id/examenes/"))
+    examenes_button: ElevatedButton = ElevatedButton(text="Exámenes", on_click=lambda _: page.go("/:user_id/examenes_alumno/"))
 
     return ft.View(
-        "/:user_id/examenes/:exam_id/identificacion_facial/veredicto_codigo_resultados",
+        "/:user_id/examenes_alumno/:exam_id/identificacion_facial/veredicto_codigo_resultados",
         controls={
             Column(controls=[
                 resultado_text,

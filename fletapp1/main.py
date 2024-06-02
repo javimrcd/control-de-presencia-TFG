@@ -6,6 +6,7 @@ from views.register import Register
 from views.register_face_db import Register_Face
 from views.examenes_alumno import Examenes_Alumno
 from views.examenes_profesor import Examenes_Profesor
+from views.crear_examen import Crear_Examen
 
 from views.identificacion_facial import Facial
 from views.captura_de_camara_facial import CapturaDeCamara_Facial
@@ -16,6 +17,9 @@ from views.identificacion_codigo import Codigo
 from views.captura_de_camara_codigo import CapturaDeCamara_Codigo
 from views.resumen_codigo import ResumenCodigo
 from views.veredicto_codigo import ResultadoVeredictoCodigo
+
+from views.examen_iniciado import ExamenIniciado
+from views.examen_finalizado import ExamenFinalizado
 
 import firebase_config
 
@@ -40,7 +44,13 @@ def main(page: ft.Page):
         path(url="/:user_id/examenes_alumno/:exam_id/identificacion_codigo/resumen_codigo", clear = True, view=ResumenCodigo),
         path(url="/:user_id/examenes_alumno/:exam_id/identificacion_facial/veredicto_codigo_resultados", clear = True, view=ResultadoVeredictoCodigo),
 
-        path(url="/:user_id/examenes_profesor/", clear = True, view=Examenes_Profesor)
+        path(url="/:user_id/examenes_alumno/:exam_id/examen_iniciado", clear = True, view=ExamenIniciado),
+        path(url="/:user_id/examenes_alumno/:exam_id/examen_finalizado", clear = True, view=ExamenFinalizado),
+
+
+        path(url="/:user_id/examenes_profesor/", clear = True, view=Examenes_Profesor),
+        path(url="/:user_id/examenes_profesor/crear_examen/", clear = True, view=Crear_Examen)
+        
     ]
 
     Routing(page=page, app_routes=app_routes)

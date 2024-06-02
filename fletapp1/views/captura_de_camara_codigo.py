@@ -7,8 +7,10 @@ import easyocr
 from state import state
 
 class CapturaDeCamara_Codigo(ft.UserControl):
-    def __init__(self, on_complete_callback):
+    def __init__(self, user_id, control_acceso_id, on_complete_callback):
         super().__init__()
+        self.user_id = user_id
+        self.control_acceso_id = control_acceso_id
         self.camera_running = False
         self.camera_lock = threading.Lock()
         self.capture_code = False
@@ -17,7 +19,7 @@ class CapturaDeCamara_Codigo(ft.UserControl):
         self.reader = easyocr.Reader(["es"], gpu=False)
         self.code_detected = ""
 
-    def update_timer(self):
+    def camara(self):
         cap = cv2.VideoCapture(0)
 
         cuadro = 100
@@ -64,7 +66,7 @@ class CapturaDeCamara_Codigo(ft.UserControl):
     def start_camera(self):
         with self.camera_lock:
             self.camera_running = True
-            threading.Thread(target=self.update_timer).start()
+            threading.Thread(target=self.camara).start()
 
     def stop_camera(self):
         with self.camera_lock:

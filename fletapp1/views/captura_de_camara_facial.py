@@ -4,20 +4,22 @@ import flet as ft
 import base64
 import threading
 from state import state
+from firebase_config import storage, db
 
 class CapturaDeCamara_Facial(ft.UserControl):
-    def __init__(self, on_complete_callback):
+    def __init__(self, user_id, control_acceso_id, on_complete_callback):
         super().__init__()
+        self.user_id = user_id
+        self.control_acceso_id = control_acceso_id
         self.camera_running = False
         self.camera_lock = threading.Lock()
         self.capture_face = False
-        self.imagesFoundPath = "views/functions/Rostros capturados/"
         self.max_rostros = 3
         self.faceClassif = cv2.CascadeClassifier('C:/Programas/opencv/sources/data/haarcascades/haarcascade_frontalface_default.xml')
         self.count = 0
         self.on_complete_callback = on_complete_callback
 
-    def update_timer(self):
+    def camara(self):
         cap = cv2.VideoCapture(0)
 
         while self.camera_running:
@@ -46,8 +48,10 @@ class CapturaDeCamara_Facial(ft.UserControl):
                     for (x,y,w,h) in faces:
                         rostro = frame[y:y+h,x:x+w]
                         rostro = cv2.resize(rostro, (150,150), interpolation=cv2.INTER_CUBIC)
-                        cv2.imwrite(self.imagesFoundPath+'rostro_{}.jpg'.format(self.count), rostro)
-                        print("Rostro "+'rostro_{}.jpg'.format(self.count)+" detectado y capturado")
+                        image_path = f"rostro_{self.count}.jpg"
+                        state.images_paths_array.append(image_path)
+                        cv2.imwrite(image_path, rostro)
+                        print(f"Rostro {self.count} detectado y capturado")
                         self.count += 1
                         self.capture_face = False
                         if self.count >= self.max_rostros:
@@ -63,7 +67,7 @@ class CapturaDeCamara_Facial(ft.UserControl):
     def start_camera(self):
         with self.camera_lock:
             self.camera_running = True
-            threading.Thread(target=self.update_timer).start()
+            threading.Thread(target=self.camara).start()
 
     def stop_camera(self):
         with self.camera_lock:

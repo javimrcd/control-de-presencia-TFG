@@ -5,12 +5,14 @@ from views.captura_de_camara_codigo import CapturaDeCamara_Codigo
 from state import state
 
 def Codigo(page: ft.Page, params: Params, basket: Basket):
+    user_id = state.user_id
+    control_acceso_id = state.control_acceso_id
 
     def on_capture_complete():
         print("Codigo capturado")
-        page.go("/:user_id/examenes/:exam_id/identificacion_codigo/resumen_codigo")
+        page.go("/:user_id/examenes_alumno/:exam_id/identificacion_codigo/resumen_codigo")
 
-    capturaDeCamaraCodigo = CapturaDeCamara_Codigo(on_complete_callback=on_capture_complete)
+    capturaDeCamaraCodigo = CapturaDeCamara_Codigo(user_id=user_id, control_acceso_id=control_acceso_id, on_complete_callback=on_capture_complete)
     capturaDeCamaraCodigo.visible = False
     state.captura_de_camara_codigo = capturaDeCamaraCodigo
 
@@ -38,7 +40,7 @@ def Codigo(page: ft.Page, params: Params, basket: Basket):
     examenes_button = ElevatedButton(text="Exámenes", on_click=lambda _: page.go("/user_id/examenes/"))
 
     return ft.View(
-        "/:user_id/examenes/:exam_id/identificacion_codigo",
+        "/:user_id/examenes_alumno/:exam_id/identificacion_codigo",
         controls=[
             ft.Text("Identificación por Código", size=25, weight="bold"),
             capturaDeCamaraCodigo,

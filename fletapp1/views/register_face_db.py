@@ -53,7 +53,7 @@ class Capture_Face_For_Register(ft.UserControl):
                         print("Imagen capturada y guardada en:", image_path)
 
                         # Subir la imagen a Firebase Storage
-                        blob = bucket.blob(f"profile_images/{image_path}")
+                        blob = bucket.blob(f"usuarios/{self.user_id}/perfil.jpg")
                         blob.upload_from_filename(image_path)
                         blob.make_public()
                         profile_image_url = blob.public_url

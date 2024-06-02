@@ -9,7 +9,7 @@ def ResultadoVeredictoFacial(page: ft.Page, params: Params, basket: Basket):
     veredicto_final_facial = state.facial_v
 
     def continuar():
-        page.go("/:user_id/examenes/:exam_id/identificacion_codigo")
+        page.go("/:user_id/examenes_alumno/:exam_id/identificacion_codigo")
 
     resultado_text = Text("Resultado enviado", size=25, weight="bold")
     veredicto_final_facial_text = Text(f"Veredicto: {veredicto_final_facial}")
@@ -17,7 +17,7 @@ def ResultadoVeredictoFacial(page: ft.Page, params: Params, basket: Basket):
     continuar_button = ElevatedButton(text="Continuar", on_click=lambda _: continuar())
 
     return ft.View(
-        "/:user_id/examenes/:exam_id/identificacion_facial/veredicto_facial_resultados",
+        "/:user_id/examenes_alumno/:exam_id/identificacion_facial/veredicto_facial_resultados",
         controls={
             Column(controls=[
                 resultado_text,
