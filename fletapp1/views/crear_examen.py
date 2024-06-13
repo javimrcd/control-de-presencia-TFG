@@ -1,5 +1,5 @@
 import flet as ft
-from flet import TextField, Checkbox, ElevatedButton, Text, Column, Row, Dropdown, SnackBar
+from flet import TextField, Checkbox, ElevatedButton, Text, Column, Switch, Row, Dropdown, SnackBar
 from flet_core.control_event import ControlEvent
 from flet_route import Params, Basket
 from state import state
@@ -30,7 +30,7 @@ def Crear_Examen(page: ft.Page, params: Params, basket: Basket):
         width=200
     )
 
-    # DatePicker para seleccionar la fecha
+    # TextField y DatePicker para seleccionar la fecha
     def fecha_seleccionada(e):
         fecha_field.value = fecha_picker.value.strftime("%Y-%m-%d")
         page.update()
@@ -51,7 +51,7 @@ def Crear_Examen(page: ft.Page, params: Params, basket: Basket):
 
     page.overlay.append(fecha_picker)
 
-    # TimePicker para seleccionar la hora de inicio
+    # TimePickers para seleccionar la hora de inicio y fin
     def hora_inicio_seleccionada(e):
         hora_inicio_field.value = hora_inicio_picker.value.strftime("%H:%M")
         page.update()
@@ -72,7 +72,6 @@ def Crear_Examen(page: ft.Page, params: Params, basket: Basket):
 
     page.overlay.append(hora_inicio_picker)
 
-    # TimePicker para seleccionar la hora de fin
     def hora_fin_seleccionada(e):
         hora_fin_field.value = hora_fin_picker.value.strftime("%H:%M")
         page.update()
@@ -96,12 +95,53 @@ def Crear_Examen(page: ft.Page, params: Params, basket: Basket):
 
     id_facial_checkbox = Checkbox(label="Id. facial", value=False)
     id_codigo_checkbox = Checkbox(label="Id. de código", value=False)
-    crear_examen_button = ElevatedButton(text="Crear examen", width=200, disabled=True)
-    back_button = ElevatedButton(text="Volver", width=200)
 
-    # Funciones
-    def validate(e: ControlEvent) -> None:
-        if all([asignatura_dropdown.value, hora_inicio_field.value, hora_fin_field.value, fecha_field.value]):
+    # Añadir switches para control al inicio y control al final
+    control_inicial_switch = Switch(label="Control al inicio del examen", value=False)
+    control_final_switch = Switch(label="Control al final del examen", value=False)
+    
+    # Texto explicativo que se actualizará según los switches
+    texto_explicativo = ft.Text(value="", size=10, italic=True, visible=True)
+
+    # Texto dinámico para mostrar la cantidad de códigos a generar
+    texto_codigos = ft.Text(value="Debes seleccionar al menos un control de acceso (inicio o final o ambos).", size=10, italic=True)
+
+    def actualizar_todos_los_textos_y_validar(e: ControlEvent) -> None:
+        # Actualizar texto explicativo
+        
+        if control_inicial_switch.value and control_final_switch.value:
+            texto_explicativo.value = "Control doble: Se requerirá un control de acceso al inicio del examen y otro al final."
+        elif control_inicial_switch.value:
+            texto_explicativo.value = "Control simple: Se requerirá un único control de acceso al inicio del examen."
+        elif control_final_switch.value:
+            texto_explicativo.value = "Control simple: Se requerirá un único control de acceso al final del examen."
+        else:
+            texto_explicativo.value = "Debes seleccionar al menos un control de acceso (inicio o final o ambos)."
+
+
+        # Actualizar texto de códigos
+        if id_codigo_checkbox.value:
+            asignatura_id = asignatura_dropdown.value
+            if asignatura_id:
+                asignatura_ref = db.collection('asignaturas').document(asignatura_id)
+                asignatura_doc = asignatura_ref.get()
+                if asignatura_doc.exists:
+                    asignatura_data = asignatura_doc.to_dict()
+                    num_alumnos = len(asignatura_data.get('alumnos', []))
+                    texto_codigos.value = f"Se generará un PDF con {num_alumnos} códigos."
+                    texto_codigos.visible = True
+                else:
+                    texto_codigos.value = ""
+                    texto_codigos.visible = False
+            else:
+                texto_codigos.value = ""
+                texto_codigos.visible = False
+        else:
+            texto_codigos.value = ""
+            texto_codigos.visible = False
+
+        # Validar formulario
+        if all([asignatura_dropdown.value, hora_inicio_field.value, hora_fin_field.value, fecha_field.value, (control_inicial_switch.value or control_final_switch.value)]):
             crear_examen_button.disabled = False
         else:
             crear_examen_button.disabled = True
@@ -118,16 +158,23 @@ def Crear_Examen(page: ft.Page, params: Params, basket: Basket):
             "hora_fin": hora_fin_field.value,
             "id_facial": id_facial_checkbox.value,
             "id_codigo": id_codigo_checkbox.value,
+            "control_inicial": control_inicial_switch.value,
+            "control_final": control_final_switch.value,
             "profesor": user_id
         }
 
         # Guardar el examen en Firestore
         try:
-            db.collection('examenes').add(examen_data)
+            examen_ref = db.collection('examenes').add(examen_data)
             page.snack_bar = SnackBar(
                 Text("Examen creado con éxito", size=20),
                 bgcolor="green"
             )
+            if id_codigo_checkbox.value:
+                examen_id = examen_ref[1].id
+                page.go(f"/{user_id}/examenes_profesor/{examen_id}/generar_codigos")
+            else:
+                page.go(f"/{user_id}/examenes_profesor")
         except Exception as e:
             page.snack_bar = SnackBar(
                 Text(f"Error al crear el examen: {str(e)}", size=20),
@@ -135,16 +182,24 @@ def Crear_Examen(page: ft.Page, params: Params, basket: Basket):
             )
         page.snack_bar.open = True
         page.update()
-        page.go(f"/{user_id}/examenes_profesor")
 
     def volver(e: ControlEvent) -> None:
         page.go(f"/{user_id}/examenes_profesor")
 
+
+    crear_examen_button = ElevatedButton(text="Crear examen", width=200, disabled=True)
+    back_button = ElevatedButton(text="Volver", width=200)
+
+    # Vincular la función combinada a los eventos on_change de los elementos
+    id_codigo_checkbox.on_change = actualizar_todos_los_textos_y_validar
+    control_inicial_switch.on_change = actualizar_todos_los_textos_y_validar
+    control_final_switch.on_change = actualizar_todos_los_textos_y_validar
+
     # Link the functions to our UI
-    asignatura_dropdown.on_change = validate
-    hora_inicio_field.on_change = validate
-    hora_fin_field.on_change = validate
-    fecha_field.on_change = validate
+    asignatura_dropdown.on_change = actualizar_todos_los_textos_y_validar
+    hora_inicio_field.on_change = actualizar_todos_los_textos_y_validar
+    hora_fin_field.on_change = actualizar_todos_los_textos_y_validar
+    fecha_field.on_change = actualizar_todos_los_textos_y_validar
     crear_examen_button.on_click = create
     back_button.on_click = volver
 
@@ -154,17 +209,20 @@ def Crear_Examen(page: ft.Page, params: Params, basket: Basket):
             Column(
                 [
                     ft.Text("Crear examen", size=25, weight="bold"),
-                    ft.Text(f"Usuario: {state.user_email}", size=15, italic=True),
-                    ft.Text(f"Rol: {state.user_role}", size=15, italic=True),
                     asignatura_dropdown,
                     Row([fecha_field, fecha_button]),
                     Row([hora_inicio_field, hora_inicio_button]),
                     Row([hora_fin_field, hora_fin_button]),
                     id_facial_checkbox,
                     id_codigo_checkbox,
+                    texto_codigos,
+                    control_inicial_switch,
+                    control_final_switch,
+                    texto_explicativo,
                     crear_examen_button,
                     back_button
                 ]
             )
         ]
     )
+

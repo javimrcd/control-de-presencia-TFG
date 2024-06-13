@@ -9,7 +9,8 @@ from firebase_config import db, bucket
 def ResumenRostros(page: ft.Page, params: Params, basket: Basket):
     user_id = state.user_id
     control_acceso_id = state.control_acceso_id
-    print(user_id, control_acceso_id)
+    examen_id = state.examen_id
+    
     image_paths = state.images_paths_array
 
     images = [ft.Image(src=image, border_radius=ft.border_radius.all(20)) for image in image_paths]
@@ -22,6 +23,12 @@ def ResumenRostros(page: ft.Page, params: Params, basket: Basket):
         page.go(f"/{user_id}/examenes_alumno/{control_acceso_id}/identificacion_facial")
 
     def confirmar():
+        print(f"Examen iniciado caso 3: {state.examen_iniciado_caso3}")
+        examen_ref = db.collection('examenes').document(examen_id).get()
+        examen_data = examen_ref.to_dict()
+        control_inicial = examen_data.get('control_inicial', False)
+        control_final =examen_data.get('control_final', False)
+
         nombre = "Javi"
         profile_image_path = f"usuarios/{user_id}/perfil.jpg"
 
@@ -33,20 +40,20 @@ def ResumenRostros(page: ft.Page, params: Params, basket: Basket):
         veredictos_individuales = []
         veredicto_final = False
 
+        print('Resultados de verificación individuales:')
         # Subir rostros a la DB
         for i, image_path in enumerate(image_paths):
             blob = bucket.blob(f"usuarios/{user_id}/controles_acceso/{control_acceso_id}/rostro_{i}.jpg")
+            if ((control_inicial == True) and (control_final == True)):
+                if state.examen_iniciado_caso3 == True:
+                    blob = bucket.blob(f"usuarios/{user_id}/controles_acceso/{control_acceso_id}/rostro_{i+3}.jpg")
+            
             blob.upload_from_filename(image_path)
             blob.make_public()
             image_url = blob.public_url
 
-            db.collection('controles_acceso').document(control_acceso_id).update({
-                f"imagen_{i+1}": image_url
-            })
 
             # Realizar la verificacion facial    
-            print('Resultados de verificación individuales:')
-        
             resultado_verificacion = DeepFace.verify(
                 img1_path = temp_profile_image, 
                 img2_path = image_path, 
@@ -57,10 +64,28 @@ def ResumenRostros(page: ft.Page, params: Params, basket: Basket):
             )
             veredictos_individuales.append((image_path, resultado_verificacion['verified']))
 
-            # Actualizar veredictos individuales en Firestore
-            db.collection('controles_acceso').document(control_acceso_id).update({
-                f"veredicto_facial_{i+1}": bool(resultado_verificacion['verified'])
-            })
+
+            if ((control_inicial == True) and (control_final == False)):
+                db.collection('controles_acceso').document(control_acceso_id).update({
+                    f"imagen_{i+1}_inicial": image_url,
+                    f"veredicto_facial_{i+1}_inicial": bool(resultado_verificacion['verified'])
+                })
+            elif ((control_inicial == False) and (control_final == True)):
+                db.collection('controles_acceso').document(control_acceso_id).update({
+                    f"imagen_{i+1}_final": image_url,
+                    f"veredicto_facial_{i+1}_final": bool(resultado_verificacion['verified'])
+                })
+            else:
+                if state.examen_iniciado_caso3 == False:
+                    db.collection('controles_acceso').document(control_acceso_id).update({
+                        f"imagen_{i+1}_inicial": image_url,
+                        f"veredicto_facial_{i+1}_inicial": bool(resultado_verificacion['verified'])
+                    })
+                else:
+                    db.collection('controles_acceso').document(control_acceso_id).update({
+                        f"imagen_{i+1}_final": image_url,
+                        f"veredicto_facial_{i+1}_final": bool(resultado_verificacion['verified'])
+                    })
 
             print('Analizando '+f'{image_path}')
             print('Distancia: '+str(resultado_verificacion['distance']))
@@ -78,10 +103,25 @@ def ResumenRostros(page: ft.Page, params: Params, basket: Basket):
 
         state.facial_v = veredicto_final # Guardo el veredicto final en el estado
 
-        # Actualizar veredicto final en Firestore    
-        db.collection('controles_acceso').document(control_acceso_id).update({
-            "veredicto_facial_final": bool(veredicto_final)
-        })
+        # Actualizar veredicto final en Firestore
+        if ((control_inicial == True) and (control_final == False)):
+            db.collection('controles_acceso').document(control_acceso_id).update({
+                "veredicto_facial_definitivo_inicial": bool(veredicto_final)
+            })
+        elif ((control_inicial == False) and (control_final == True)):
+            db.collection('controles_acceso').document(control_acceso_id).update({
+                "veredicto_facial_definitivo_final": bool(veredicto_final)
+            })
+        else:
+            if state.examen_iniciado_caso3 == False:
+                db.collection('controles_acceso').document(control_acceso_id).update({
+                    "veredicto_facial_definitivo_inicial": bool(veredicto_final)
+                })
+            else:
+                db.collection('controles_acceso').document(control_acceso_id).update({
+                    "veredicto_facial_definitivo_final": bool(veredicto_final)
+                })
+        
 
         print('Veredicto final:',veredicto_final)
         

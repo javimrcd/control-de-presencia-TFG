@@ -37,7 +37,6 @@ def Codigo(page: ft.Page, params: Params, basket: Basket):
 
     camara_button = ElevatedButton(text="Abrir cámara", bgcolor="orange", color="white", width=200, on_click=on_camara_button_click)
     captura_codigo_button = ElevatedButton(text="Captura un código", bgcolor="green", color="white", width=200, on_click=on_captura_codigo_click, visible=False)
-    examenes_button = ElevatedButton(text="Exámenes", on_click=lambda _: page.go("/user_id/examenes/"))
 
     return ft.View(
         "/:user_id/examenes_alumno/:exam_id/identificacion_codigo",
@@ -46,7 +45,6 @@ def Codigo(page: ft.Page, params: Params, basket: Basket):
             capturaDeCamaraCodigo,
             camara_button,
             captura_codigo_button,
-            examenes_button
         ]
     )
 

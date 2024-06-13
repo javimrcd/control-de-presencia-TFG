@@ -32,13 +32,16 @@ class CapturaDeCamara_Codigo(ft.UserControl):
             # cv2.putText(frame, 'Ubique aqui el texto a leer', (160,80), cv2.FONT_HERSHEY_SIMPLEX, 0.71, (0, 0, 0), 2)
             cv2.rectangle(frame, (cuadro, cuadro), (anchocam - cuadro, altocam - cuadro), (0, 0, 0), 2) # Pintamos cuadro
             x1, y1 = cuadro, cuadro
-            ancho, alto = (anchocam - cuadro) - x1, (altocam - cuadro) - y1 # Extraemos el anchoy el alto
+            ancho, alto = (anchocam - cuadro) - x1, (altocam - cuadro) - y1 # Extraemos el ancho y el alto
             x2, y2 = x1 + ancho, y1 + alto # Almacenamos los pixeles del recuadro
             doc = frame[y1:y2, x1:x2]
     
             if ret:
                 if self.capture_code:
-                    cv2.imwrite(self.imagesFoundPath + 'codigo.jpg', doc)
+                    if not state.examen_iniciado_caso1 or not state.examen_iniciado_caso3:
+                        cv2.imwrite(self.imagesFoundPath + 'codigo_inicial.jpg', doc)
+                    elif not state.examen_finalizado_caso2 or state.examen_iniciado_caso3:
+                        cv2.imwrite(self.imagesFoundPath + 'codigo_final.jpg', doc)
                     self.capture_code = False
                     doc = cv2.flip(doc, 1)
                     self.code_detected = self.extract_text(doc)

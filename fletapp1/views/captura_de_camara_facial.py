@@ -21,6 +21,7 @@ class CapturaDeCamara_Facial(ft.UserControl):
 
     def camara(self):
         cap = cv2.VideoCapture(0)
+        
 
         while self.camera_running:
             ret, frame = cap.read()
@@ -48,7 +49,10 @@ class CapturaDeCamara_Facial(ft.UserControl):
                     for (x,y,w,h) in faces:
                         rostro = frame[y:y+h,x:x+w]
                         rostro = cv2.resize(rostro, (150,150), interpolation=cv2.INTER_CUBIC)
-                        image_path = f"rostro_{self.count}.jpg"
+                        if state.examen_iniciado_caso3:
+                            image_path = f"rostro_{self.count + 3}.jpg"
+                        else:
+                            image_path = f"rostro_{self.count}.jpg"
                         state.images_paths_array.append(image_path)
                         cv2.imwrite(image_path, rostro)
                         print(f"Rostro {self.count} detectado y capturado")

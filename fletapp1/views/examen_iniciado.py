@@ -1,13 +1,26 @@
 import flet as ft
 from flet import ElevatedButton, Column, Text
 from flet_route import Params, Basket
+from state import state
 
 def ExamenIniciado(page: ft.Page, params: Params, basket: Basket):
+    user_id = state.user_id
+    control_acceso_id = state.control_acceso_id
 
-    examenes_button: ElevatedButton = ElevatedButton(text="Exámenes", on_click=lambda _: page.go("/:user_id/examenes_alumno/"))
+
+    def iniciar_examen():
+
+        # Actualizar las variables de estado
+        state.examen_iniciado_caso1 = True if state.examen_iniciado_caso1 == False else state.examen_iniciado_caso1
+        state.examen_iniciado_caso3 = True if state.examen_iniciado_caso3 == False else state.examen_iniciado_caso3
+
+
+        page.go(f"/{user_id}/examenes_alumno/")
+
+    examenes_button: ElevatedButton = ElevatedButton(text="Exámenes", on_click=lambda _: iniciar_examen())
 
     return ft.View(
-        "/:user_id/examenes_alumno/:exam_id/examen_iniciado",
+        f"/{user_id}/examenes_alumno/{control_acceso_id}/examen_iniciado",
         controls={
             Column(controls=[
                 ft.Text("Examen iniciado con éxito", size=15, weight="bold"),

@@ -8,6 +8,7 @@ from state import state
 def Facial(page: ft.Page, params: Params, basket: Basket):
     user_id = state.user_id
     control_acceso_id = state.control_acceso_id
+    state.images_paths_array = []
 
     def on_capture_complete():
         page.go("/:user_id/examenes_alumno/:exam_id/identificacion_facial/resumen_rostros")
@@ -40,7 +41,6 @@ def Facial(page: ft.Page, params: Params, basket: Basket):
 
     camara_button: ElevatedButton = ElevatedButton(text="Abrir cámara", bgcolor="orange", color="white", width=200, on_click=on_camara_button_click)
     captura_rostros_button: ElevatedButton = ElevatedButton(text="Captura un rostro", bgcolor="green", color="white", width=200, on_click=on_captura_rostros_click, visible=False)
-    examenes_button: ElevatedButton = ElevatedButton(text="Exámenes", on_click=lambda _: page.go("/:user_id/examenes_alumno/"))
 
     return ft.View(
         "/:user_id/examenes_alumno/:exam_id/identificacion_facial",
@@ -49,7 +49,6 @@ def Facial(page: ft.Page, params: Params, basket: Basket):
             ft.Text("Identificación facial", size=25, weight="bold"),
             capturaDeCamara,
             camara_button,
-            captura_rostros_button,
-            examenes_button
+            captura_rostros_button
         ]
     )

@@ -7,6 +7,7 @@ from views.register_face_db import Register_Face
 from views.examenes_alumno import Examenes_Alumno
 from views.examenes_profesor import Examenes_Profesor
 from views.crear_examen import Crear_Examen
+from views.generar_codigos import GenerarCodigos
 
 from views.identificacion_facial import Facial
 from views.captura_de_camara_facial import CapturaDeCamara_Facial
@@ -30,6 +31,7 @@ def main(page: ft.Page):
     page.window_width = 300
     page.window_height = 600
     page.window_resizable = True
+    page.scroll = True
 
     app_routes = [
         # path(url="/", clear = True, view=Home),
@@ -49,7 +51,8 @@ def main(page: ft.Page):
 
 
         path(url="/:user_id/examenes_profesor/", clear = True, view=Examenes_Profesor),
-        path(url="/:user_id/examenes_profesor/crear_examen/", clear = True, view=Crear_Examen)
+        path(url="/:user_id/examenes_profesor/crear_examen/", clear = True, view=Crear_Examen),
+        path(url="/:user_id/examenes_profesor/:examen_id/generar_codigos", clear = True, view=GenerarCodigos)
         
     ]
 
